@@ -1,6 +1,7 @@
 import { File } from "@google-cloud/storage"
-import { CommandInteraction, MessageAttachment, MessageEmbed, User } from "discord.js"
+import { CommandInteraction, MessageEmbed } from "discord.js"
 import { Timestamp } from "firebase-admin/firestore"
+import { getRandomFile } from "../../../Firebase/storage"
 import { baseEmbedMessage } from "../../../Bot/embed"
 import { db } from "../../../firebase"
 import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs, DiscordUser } from "./log.functions"
@@ -16,23 +17,22 @@ export const logCardio = async function (interaction: CommandInteraction) {
     const logData = <CardioLog>(await logRef.get()).data()
 
     // Calculate...
-    const { thisMonth, prevMonth } = getRelativeDates(interaction.createdAt);
-    const thisMonthsLogs = await getLogs(interaction, thisMonth.startDate, interaction.createdAt);
-    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.toDate);
+    const { thisMonth, prevMonth } = getRelativeDates(interaction.createdAt)
+    const thisMonthsLogs = await getLogs(interaction, thisMonth.startDate, interaction.createdAt)
+    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.toDate)
     const thisMonthsTotals = reduceLogs(thisMonthsLogs)
     const prevMonthsTotals = reduceLogs(prevMonthsLogs)
     const thisMonthsAverages = getAverages(thisMonthsTotals, thisMonthsLogs.size)
     const prevMonthsAverages = getAverages(prevMonthsTotals, prevMonthsLogs.size)
 
     // Reply...
-    const embedReply = createCardioLogEmbed(interaction, logData, [thisMonthsAverages, prevMonthsAverages])
-    // await generateReport(interaction, logData)
+    const embedReply = await createCardioLogEmbed(interaction, logData, [thisMonthsAverages, prevMonthsAverages])
     interaction.editReply({ embeds: [embedReply] })
-  }
-
-  catch (err) {
+  } catch (err) {
     if (err instanceof Error) {
-      const embed = baseEmbedMessage().setTitle(`⚠️ Sorry, we ran into a problem.`).setDescription(`${ err?.message || err }`)
+      const embed = baseEmbedMessage()
+        .setTitle(`⚠️ Sorry, we ran into a problem.`)
+        .setDescription(`${err?.message || err}`)
       if (interaction.replied) await interaction.followUp({ embeds: [embed], ephemeral: false })
       if (!interaction.replied) await interaction.reply({ embeds: [embed], ephemeral: false })
     }
@@ -50,7 +50,7 @@ async function saveCardioLog(interaction: CommandInteraction, storageFile: File)
   const intensity = interaction.options.getNumber("intensity")!
   const input_date = interaction.options.getNumber("date")!
   const logType = interaction.options.getSubcommand()
-  const loggedDate = interaction.createdAt;
+  const loggedDate = interaction.createdAt
   loggedDate.setDate(loggedDate.getDate() - input_date)
 
   const logsRef = db.collection("logs")
@@ -78,14 +78,17 @@ async function saveCardioLog(interaction: CommandInteraction, storageFile: File)
  * @returns an object containing totaled data
  */
 function reduceLogs(logs: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>): CardioStats {
-  return logs.docs.reduce((total, current) => {
-    const data = <CardioLog>current.data()
+  return logs.docs.reduce(
+    (total, current) => {
+      const data = <CardioLog>current.data()
 
-    return {
-      minutes: total.minutes + data.minutes,
-      intensity: total.intensity + data.intensity
-    }
-  }, { minutes: 0, intensity: 0})
+      return {
+        minutes: total.minutes + data.minutes,
+        intensity: total.intensity + data.intensity,
+      }
+    },
+    { minutes: 0, intensity: 0 }
+  )
 }
 
 /**
@@ -100,45 +103,60 @@ function getAverages(totals: CardioStats, count: number): CardioStats {
   return {
     count: totalCount,
     minutes: Math.round((totals.minutes! / totalCount) * 10) / 10,
-    intensity: Math.round((totals.intensity! / totalCount) * 10) / 10
+    intensity: Math.round((totals.intensity! / totalCount) * 10) / 10,
   }
 }
 
 /**
- * Formats out a reply using all of the supplied data 
+ * Formats out a reply using all of the supplied data
  * @param interaction the interaction the bot is replying to
  * @param log the log saved from the interaction
  * @param averages the monthly stat averages of the user who initialized the interaction
  * @returns Discord Message embed object
  */
-function createCardioLogEmbed(interaction: CommandInteraction, log: CardioLog, averages : CardioStats[]): MessageEmbed {
-  const [thisMonthsAverages, prevMonthsAverages] = averages;
+async function createCardioLogEmbed(interaction: CommandInteraction, log: CardioLog, averages: CardioStats[]): Promise<MessageEmbed> {
+  const [thisMonthsAverages, prevMonthsAverages] = averages
   const percentage = (thisMonthsAverages.count! / prevMonthsAverages.count!) * 100
+
+  // Create reaction thumb
+  let reaction = "neutral"
+  reaction = percentage <= 80 ? "negative" : reaction
+  reaction = percentage >= 100 ? "positive" : reaction
+  const file = await getRandomFile(`assets/reactions/${reaction}`)
+
+  const prevMonth = interaction.createdAt
+  prevMonth.setMonth(prevMonth.getMonth() - 1)
+
   return baseEmbedMessage()
-    .setTitle(`${ interaction.user.username } just logged some cardio, please clap!`)
-    .setDescription(`You are logging ${ percentage }% of the cardio you did last month.`)
-    .setImage(`${ log.image }`)
+    .setTitle(`${interaction.user.username} just logged some cardio, please clap!`)
+    .setDescription(`\`\`\`You are logging ${ percentage }% of the cardio you did last month.\`\`\``)
+    .setThumbnail(file.publicUrl())
+    .setImage(`${log.image}`)
     .setFields([
-      { name: "📅 Date", value: `${ interaction.createdAt.toDateString() }`, inline: false },
-      { name: "🏃‍♂️ Today's Length", value: `${ log.minutes } min`, inline: true },
-      { name: `${ interaction.createdAt.toLocaleString('default', { month: 'long' }) }'s Average`, value: `${ thisMonthsAverages.minutes } min`, inline: true },
-      { name: `Last Month's Average`, value: `${ prevMonthsAverages.minutes } min`, inline: true },
-      { name: "💦 Today's Intensity", value: `Zone ${ log.intensity }`, inline: true },
-      { name: `${ interaction.createdAt.toLocaleString('default', { month: 'long' }) }'s Average`, value: `Zone ${ thisMonthsAverages.intensity }`, inline: true },
-      { name: `Last Month's Average`, value: `Zone ${ prevMonthsAverages.intensity }`, inline: true },
+      { name: "📅 DATE", value: `${interaction.createdAt.toDateString()}`, inline: false },
+      { name: "🏃‍♂️ LENGTH", value: `${log.minutes} min`, inline: true },
+      { name: `${ interaction.createdAt.toLocaleString("default", { month: "short" }).toLocaleUpperCase() } AVG.`, value: `${thisMonthsAverages.minutes} min`, inline: true },
+      { name: `${ prevMonth.toLocaleString("default", { month: 'short' }).toLocaleUpperCase() } AVG.`, value: `${prevMonthsAverages.minutes} min`, inline: true },
+      { name: "💦 INTENSITY", value: `Zone ${log.intensity}`, inline: true },
+      { name: `${ interaction.createdAt.toLocaleString("default", { month: "short" }).toUpperCase() } AVG.`, value: `Zone ${thisMonthsAverages.intensity}`, inline: true },
+      { name: `${ prevMonth.toLocaleString("default", { month: "short" }).toUpperCase() } AVG.`, value: `Zone ${prevMonthsAverages.intensity}`, inline: true },
     ])
+    .setFooter({
+      text: `Last month you logged ${ prevMonthsAverages.count } workouts on the same date`,
+      iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
+    })
 }
 
 interface CardioLog {
-  created: Timestamp;
-  date: Timestamp;
-  image: string;
-  intensity: number;
-  lift_type: 'cardio';
-  minutes: number;
-  user: DiscordUser;
+  created: Timestamp
+  date: Timestamp
+  image: string
+  intensity: number
+  lift_type: "cardio"
+  minutes: number
+  user: DiscordUser
 }
 
-type CardioStats = Pick<CardioLog, 'minutes' | 'intensity'> & {
-  count?: number;
+type CardioStats = Pick<CardioLog, "minutes" | "intensity"> & {
+  count?: number
 }
