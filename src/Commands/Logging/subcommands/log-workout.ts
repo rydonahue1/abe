@@ -5,6 +5,7 @@ import { baseEmbedMessage } from "../../../Bot/embed"
 import { db } from "../../../firebase"
 import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
 import type { DiscordUser } from "./log.functions"
+import { getRandomFile } from "../../../Firebase/storage"
 
 export const logWorkout = async function (interaction: CommandInteraction) {
   if (!interaction.member) return
@@ -17,20 +18,20 @@ export const logWorkout = async function (interaction: CommandInteraction) {
     const logData = <WorkoutLog>(await logRef.get()).data()
 
     // Calculate...
-    const { thisMonth, prevMonth } = getRelativeDates(interaction.createdAt);
-    const thisMonthsLogs = await getLogs(interaction, thisMonth.startDate, interaction.createdAt);
-    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.toDate);
+    const { thisMonth, prevMonth } = getRelativeDates(interaction.createdAt)
+    const thisMonthsLogs = await getLogs(interaction, thisMonth.startDate, interaction.createdAt)
+    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.toDate)
     const reducedLogs = reduceLogs(thisMonthsLogs)
 
     // Reply...
-    const embedReply = createWorkoutLogEmbed(interaction, logData, [thisMonthsLogs.size, prevMonthsLogs.size], reducedLogs)
+    const embedReply = await createWorkoutLogEmbed(interaction, logData, [thisMonthsLogs.size, prevMonthsLogs.size], reducedLogs)
     // await generateReport(interaction, logData)
     interaction.editReply({ embeds: [embedReply] })
-  }
-
-  catch (err) {
+  } catch (err) {
     if (err instanceof Error) {
-      const embed = baseEmbedMessage().setTitle(`⚠️ Sorry, we ran into a problem.`).setDescription(`${ err?.message || err }`)
+      const embed = baseEmbedMessage()
+        .setTitle(`⚠️ Sorry, we ran into a problem.`)
+        .setDescription(`${err?.message || err}`)
       if (interaction.replied) await interaction.followUp({ embeds: [embed], ephemeral: false })
       if (!interaction.replied) await interaction.reply({ embeds: [embed], ephemeral: false })
     }
@@ -47,7 +48,7 @@ async function saveWorkout(interaction: CommandInteraction, storageFile: File) {
   const liftType = interaction.options.getString("lift-type")!
   const input_date = interaction.options.getNumber("date")!
   const logType = interaction.options.getSubcommand()
-  const loggedDate = interaction.createdAt;
+  const loggedDate = interaction.createdAt
   loggedDate.setDate(loggedDate.getDate() - input_date)
 
   const logsRef = db.collection("logs")
@@ -84,43 +85,58 @@ function reduceLogs(logs: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.Docu
  * @param logCounts array of log counts for this month and previous
  * @returns Discord Message embed object
  */
-function createWorkoutLogEmbed(interaction: CommandInteraction, log: WorkoutLog, logCounts : number[], liftTypes: Record<LiftTypes, number>): MessageEmbed {
-  const [thisMonthsCount, prevMonthsCount] = logCounts;
+async function createWorkoutLogEmbed(
+  interaction: CommandInteraction,
+  log: WorkoutLog,
+  logCounts: number[],
+  liftTypes: Record<LiftTypes, number>
+): Promise<MessageEmbed> {
+  const [thisMonthsCount, prevMonthsCount] = logCounts
   const percentage = (thisMonthsCount / (prevMonthsCount ? prevMonthsCount : 1)) * 100
 
-  let typesList = '';
-  let countList = '';
-
+  // Create breakdown
+  let typesList = ""
+  let countList = ""
   Object.entries(liftTypes)
     .sort(([atype, aCount], [bType, bCount]) => bCount - aCount)
     .map(([key, value]) => {
-    typesList += `${ key }\n`
-    countList += `${ value }\n`
-  })
+      typesList += `${key}\n`
+      countList += `${value}\n`
+    })
 
+  // Create reaction thumb
+  let reaction = "neutral"
+  reaction = percentage <= 80 ? "negative" : reaction
+  reaction = percentage >= 100 ? "positive" : reaction
+  const file = await getRandomFile(`assets/reactions/${reaction}`)
+
+  // Create embed
   return baseEmbedMessage()
-    .setTitle(`${ interaction.user.username } just logged a ${ log.liftType.toLowerCase() } workout, please clap!`)
-    .setDescription(`\`\`\`You are logging ${ percentage }% of the workouts you did last month.\`\`\``)
-    .setThumbnail(`https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg`)
-    .setImage(`${ log.image }`)
+    .setTitle(`${interaction.user.username} just logged a ${log.liftType.toLowerCase()} workout, please clap!`)
+    .setDescription(`\`\`\`You are logging ${percentage}% of the workouts you did last month.\`\`\``)
+    .setThumbnail(file.publicUrl())
+    .setImage(`${log.image}`)
     .setFields([
-      { name: "📅 DATE", value: `${ log.date.toDate().toDateString() }`, inline: true },
-      { name: `${ interaction.createdAt.toLocaleString('default', { month: 'long' }).toUpperCase() } TOTAL`, value: `${ thisMonthsCount } logs`, inline: true },
-      { name: "🏋️‍♂️ LIFTED", value: `${ log.liftType }`, inline: false },
+      { name: "📅 DATE", value: `${log.date.toDate().toDateString()}`, inline: true },
+      { name: `${interaction.createdAt.toLocaleString("default", { month: "long" }).toUpperCase()} TOTAL`, value: `${thisMonthsCount} logs`, inline: true },
+      { name: "🏋️‍♂️ LIFTED", value: `${log.liftType}`, inline: false },
       { name: `📈 BREAKDOWN`, value: typesList, inline: true },
       { name: `\u200B`, value: countList, inline: true },
     ])
-    .setFooter({ text: `Last month you logged ${ prevMonthsCount } workouts on the same date`, iconURL: 'https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg' });
+    .setFooter({
+      text: `Last month you logged ${prevMonthsCount} workouts on the same date`,
+      iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
+    })
 }
 
-type LiftTypes = 'Push Day' | 'Pull Day' | 'Leg Day' | 'Chest Day' | 'Back Day' | 'Shoulder Day' | 'Arm Day' | 'Accessory Day' | 'Full Body'
+type LiftTypes = "Push Day" | "Pull Day" | "Leg Day" | "Chest Day" | "Back Day" | "Shoulder Day" | "Arm Day" | "Accessory Day" | "Full Body"
 
 interface WorkoutLog {
-  created: Timestamp;
-  date: Timestamp;
-  logType: 'workout';
-  liftType: LiftTypes;
-  image: string;
-  minutes: number;
-  user: DiscordUser;
+  created: Timestamp
+  date: Timestamp
+  logType: "workout"
+  liftType: LiftTypes
+  image: string
+  minutes: number
+  user: DiscordUser
 }
