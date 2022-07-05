@@ -1,19 +1,34 @@
 import { defineConfig } from 'vite'
 import path from "path";
 
-
 // https://vitejs.dev/config/
 export default defineConfig({
-  define: { 'process.env': {} },
+  // define: { 'process.env': {} },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
+    extensions: [
+      '.js',
+      '.json',
+      '.jsx',
+      '.mjs',
+      '.ts',
+      '.tsx',
+      '.vue',
+    ]
   },
   build: {
     target: [ 'es2020' ],
     rollupOptions: {
-      input: 'src/main.ts'
+      input: 'src/main.ts',
+      output: {
+        dir: 'dist/main.js',
+        format: 'cjs'
+      },
+      plugins: [
+        // typescript()
+      ],
     }
   }
   /* remove the need to specify .vue files https://vitejs.dev/config/#resolve-extensions

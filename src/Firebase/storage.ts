@@ -3,10 +3,10 @@ import { storage } from "../firebase"
 
 import https from "https"
 import { v4 as uuidv4 } from "uuid"
-import config from "../../config.json"
+import { firebaseBucket } from "../config";
 
 export async function getRandomFile(path: string) {
-  const bucket = storage.bucket(config.firebase_bucket)
+  const bucket = storage.bucket(firebaseBucket)
   const [files] = await bucket.getFiles({ prefix: path })
   const randomIndex = Math.ceil(Math.random() * (files.length - 1))
 
@@ -14,7 +14,7 @@ export async function getRandomFile(path: string) {
 }
 
 export async function uploadFromURL(url: string, path: string, fileName: string) {
-  const bucket = storage.bucket(config.firebase_bucket)
+  const bucket = storage.bucket(firebaseBucket)
   const fileRef = bucket.file(`${path}${fileName}`)
 
   return new Promise<typeof fileRef>((resolve, reject) => {
@@ -43,7 +43,7 @@ export async function uploadFromURL(url: string, path: string, fileName: string)
 // Upload remote file to storage bucket
 export async function uploadMessageAttachment(attachment: MessageAttachment, path: string, fileName?: string) {
 
-  const bucket = storage.bucket(config.firebase_bucket)
+  const bucket = storage.bucket(firebaseBucket)
   const name = fileName ? fileName : attachment.name
   const fileRef = bucket.file(`${path}${name}`)
   // bucket.makePublic()

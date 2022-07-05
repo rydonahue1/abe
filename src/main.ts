@@ -1,11 +1,11 @@
 import Bot from "./Bot/"
-import config from "../config.json"
+import { token } from "./config";
 
 (async () => {
   try {
     console.log(`Inititializing bot...`)
-    const botInstance = new Bot(config.token);
-    const loggedIn = await botInstance.login(config.token);
+    const botInstance = new Bot(token);
+    const loggedIn = await botInstance.login(token);
     console.log(`logged in: ${ loggedIn }`)
     await botInstance.init();
   }
