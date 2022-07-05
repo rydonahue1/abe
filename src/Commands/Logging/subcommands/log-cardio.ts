@@ -3,7 +3,7 @@ import { CommandInteraction, MessageAttachment, MessageEmbed, User } from "disco
 import { Timestamp } from "firebase-admin/firestore"
 import { baseEmbedMessage } from "../../../Bot/embed"
 import { db } from "../../../firebase"
-import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
+import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs, DiscordUser } from "./log.functions"
 
 export const logCardio = async function (interaction: CommandInteraction) {
   if (!interaction.member) return
@@ -18,7 +18,7 @@ export const logCardio = async function (interaction: CommandInteraction) {
     // Calculate...
     const { thisMonth, prevMonth } = getRelativeDates(interaction.createdAt);
     const thisMonthsLogs = await getLogs(interaction, thisMonth.startDate, interaction.createdAt);
-    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.endDate);
+    const prevMonthsLogs = await getLogs(interaction, prevMonth.startDate, prevMonth.toDate);
     const thisMonthsTotals = reduceLogs(thisMonthsLogs)
     const prevMonthsTotals = reduceLogs(prevMonthsLogs)
     const thisMonthsAverages = getAverages(thisMonthsTotals, thisMonthsLogs.size)
@@ -37,7 +37,6 @@ export const logCardio = async function (interaction: CommandInteraction) {
       if (!interaction.replied) await interaction.reply({ embeds: [embed], ephemeral: false })
     }
   }
-
 }
 
 /**
@@ -54,12 +53,7 @@ async function saveCardioLog(interaction: CommandInteraction, storageFile: File)
   const loggedDate = interaction.createdAt;
   loggedDate.setDate(loggedDate.getDate() - input_date)
 
-  // const path = `logs/${interaction.user.username}${interaction.user.discriminator}/`
-  // const fileName = `${getSortableDate(date)}.jpg`
   const logsRef = db.collection("logs")
-  // Commented out to allow more thank one log in a day
-  // const snap = await logsRef.where("user.id", "==", interaction.user.id).where("date", "==", loggedDate).get()
-  // if (snap.docs.length) throw new Error("Looks like we already have a log that day, champ.")
 
   return await logsRef.add({
     created: Timestamp.now(),
@@ -135,78 +129,6 @@ function createCardioLogEmbed(interaction: CommandInteraction, log: CardioLog, a
     ])
 }
 
-// async function generateReport(interaction: CommandInteraction, logData: FirebaseFirestore.DocumentData | undefined) {
-  // const logDate = interaction.createdAt
-  // const prevMonthStart = new Date(logDate.getFullYear(), logDate.getMonth() - 1, 1)
-  // const prevMonthEnd = new Date(logDate.getFullYear(), logDate.getMonth() - 1, logDate.getDate())
-
-  // interaction.options.getSubcommand
-
-  // const logsRef = db.collection("logs")
-  // const prevMonthLogs = await logsRef
-  //   .where("user.id", "==", interaction.user.id)
-  //   .where("lift_type", '==', 'cardio')
-  //   .where('date', '>=', prevMonthStart)
-  //   .where('date', '<=', prevMonthEnd)
-  //   .get()
-
-  // const thisMonthLogs = await logsRef
-  //   .where("user.id", "==", interaction.user.id)
-  //   .where("lift_type", '==', 'cardio')
-  //   .where('date', '>=', prevMonthStart)
-  //   .where('date', '<=', logDate)
-  //   .get()
-
-  // const prevMonthsTotals = prevMonthLogs.docs.reduce((total, current) => {
-  //   const data = <CardioLog>current.data()
-
-  //   return {
-  //     minutes: total.minutes + data.minutes,
-  //     intensity: total.intensity + data.intensity
-  //   }
-  // }, { minutes: 0, intensity: 0})
-
-  // const thisMonthTotals = thisMonthLogs.docs.reduce((total, current) => {
-  //   const data = <CardioLog>current.data()
-
-  //   return {
-  //     minutes: total.minutes + data.minutes,
-  //     intensity: total.intensity + data.intensity
-  //   }
-  // }, { minutes: 0, intensity: 0})
-
-  // const prevMonthLogCount = prevMonthLogs.size ? prevMonthLogs.size : 1;
-  // const thisMonthLogCount = thisMonthLogs.size;
-  // const percentage = (thisMonthLogCount / prevMonthLogCount) * 100;
-
-  // const averages = {
-  //   thisMonth: {
-  //     month: logData?.date.toDate().toLocaleString('default', { month: 'long' }),
-  //     minutes: Math.round((thisMonthTotals.minutes / thisMonthLogs.size) * 10) / 10,
-  //     intensity: Math.round((thisMonthTotals.intensity / thisMonthLogs.size) * 10) / 10,
-  //   },
-  //   prevMonth: {
-  //     minutes: Math.round((prevMonthsTotals.minutes / thisMonthLogs.size) * 10) / 10,
-  //     intensity: Math.round((prevMonthsTotals.intensity / thisMonthLogs.size) * 10) / 10,
-  //   }
-  // }
-
-  // const embed = baseEmbedMessage()
-  //   .setTitle(`${ interaction.user.username } just logged some cardio, please clap!`)
-  //   .setDescription(`You are logging ${ percentage }% of the cardio you did last month.`)
-  //   .setImage(`${ logData?.image }`)
-  //   .setFields([
-  //     { name: "📅 Date", value: `${ logData?.date.toDate().toDateString() }`, inline: false },
-  //     { name: "🏃‍♂️ Today's Length", value: `${ logData?.minutes } min`, inline: true },
-  //     { name: `${ averages.thisMonth.month }'s Average`, value: `${ averages.thisMonth.minutes } min`, inline: true },
-  //     { name: `Last Month's Average`, value: `${ averages.prevMonth.minutes } min`, inline: true },
-  //     { name: "💦 Today's Intensity", value: `Zone ${ logData?.intensity }`, inline: true },
-  //     { name: `${ averages.thisMonth.month }'s Average`, value: `Zone ${ averages.thisMonth.intensity }`, inline: true },
-  //     { name: `Last Month's Average`, value: `Zone ${ averages.prevMonth.intensity }`, inline: true },
-  //   ])
-  // interaction.editReply({ embeds: [embed] })
-// }
-
 interface CardioLog {
   created: Timestamp;
   date: Timestamp;
@@ -219,11 +141,4 @@ interface CardioLog {
 
 type CardioStats = Pick<CardioLog, 'minutes' | 'intensity'> & {
   count?: number;
-}
-
-interface DiscordUser {
-  avatar: string;
-  discriminator: string;
-  id: string;
-  username: string;
 }

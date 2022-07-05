@@ -80,16 +80,24 @@ export async function saveImageToCloud(interaction: CommandInteraction, maessage
 export function getRelativeDates(date: Date) {
   return {
     thisMonth: {
-      startDate: new Date(date.getFullYear(), (date.getMonth() - 1), 1, 0, 0, 0),
-      endDate: new Date(date.getFullYear(), date.getMonth(), 0, 0, 0, 0)
+      startDate: new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0),
+      endDate: new Date(date.getFullYear(), (date.getMonth() + 1), 0, 0, 0, 0)
     },
     prevMonth: {
-      startDate: new Date(date.getFullYear(), (date.getMonth() - 2), 1, 0, 0, 0),
-      endDate: new Date(date.getFullYear(), (date.getMonth() - 1), 0, 0, 0, 0)
+      startDate: new Date(date.getFullYear(), (date.getMonth() - 1), 1, 0, 0, 0),
+      endDate: new Date(date.getFullYear(), date.getMonth(), 0, 0, 0, 0),
+      toDate: new Date(date.getFullYear(), (date.getMonth() - 1), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds())
     },
     thisYear: {
       startDate: new Date(date.getFullYear(), 0, 1, 0, 0, 0),
       endDate: new Date(date.getFullYear() + 1, 0, 0, 0, 0, 0)
     }
   }
+}
+
+export interface DiscordUser {
+  avatar: string;
+  discriminator: string;
+  id: string;
+  username: string;
 }
