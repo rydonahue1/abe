@@ -6,7 +6,7 @@ export default defineConfig({
   // define: { 'process.env': {} },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, '/src'),
     },
     extensions: [
       '.js',
