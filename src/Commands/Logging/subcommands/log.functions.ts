@@ -94,10 +94,3 @@ export function getRelativeDates(date: Date) {
     }
   }
 }
-
-export interface DiscordUser {
-  avatar: string;
-  discriminator: string;
-  id: string;
-  username: string;
-}

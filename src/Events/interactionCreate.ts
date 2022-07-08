@@ -1,4 +1,4 @@
-import { Event } from "../Interfaces"
+import { Event } from "@types"
 import { CommandInteraction } from "discord.js"
 import Bot from "../Bot"
 

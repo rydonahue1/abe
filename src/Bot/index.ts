@@ -1,4 +1,4 @@
-import { Command, Event } from "../Interfaces/index"
+import { Command, Event } from "@types"
 import { Client, Collection, CommandInteraction, Intents } from "discord.js"
 import glob from "glob";
 import { promisify } from "util";

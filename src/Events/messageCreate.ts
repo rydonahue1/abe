@@ -1,4 +1,4 @@
-import { Event } from "../Interfaces"
+import { Event } from "@types"
 import { Message } from "discord.js"
 
 export const event: Event = {

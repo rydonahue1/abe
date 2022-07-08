@@ -4,8 +4,8 @@ import { Timestamp } from "firebase-admin/firestore"
 import { baseEmbedMessage } from "../../../Bot/embed"
 import { db } from "../../../firebase"
 import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
-import type { DiscordUser } from "./log.functions"
 import { getRandomFile } from "../../../Firebase/storage"
+import { LiftTypes, WorkoutLog } from "@types"
 
 export const logWorkout = async function (interaction: CommandInteraction) {
   if (!interaction.member) return
@@ -45,8 +45,8 @@ export const logWorkout = async function (interaction: CommandInteraction) {
  * @returns Firebase doc reference
  */
 async function saveWorkout(interaction: CommandInteraction, storageFile: File) {
-  const liftType = interaction.options.getString("lift-type")!
-  const input_date = interaction.options.getNumber("date")!
+  const liftType = interaction.options.getString("lift-type", true)
+  const input_date = interaction.options.getNumber("date", true)
   const logType = interaction.options.getSubcommand()
   const loggedDate = interaction.createdAt
   loggedDate.setDate(loggedDate.getDate() - input_date)
@@ -127,16 +127,4 @@ async function createWorkoutLogEmbed(
       text: `Last month you logged ${prevMonthsCount} workouts on the same date`,
       iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
     })
-}
-
-type LiftTypes = "Push Day" | "Pull Day" | "Leg Day" | "Chest Day" | "Back Day" | "Shoulder Day" | "Arm Day" | "Accessory Day" | "Full Body"
-
-interface WorkoutLog {
-  created: Timestamp
-  date: Timestamp
-  logType: "workout"
-  liftType: LiftTypes
-  image: string
-  minutes: number
-  user: DiscordUser
 }

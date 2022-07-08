@@ -4,7 +4,8 @@ import { Timestamp } from "firebase-admin/firestore"
 import { getRandomFile } from "../../../Firebase/storage"
 import { baseEmbedMessage } from "../../../Bot/embed"
 import { db } from "../../../firebase"
-import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs, DiscordUser } from "./log.functions"
+import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
+import { CardioLog, CardioStats } from "@types"
 
 export const logCardio = async function (interaction: CommandInteraction) {
   if (!interaction.member) return
@@ -145,18 +146,4 @@ async function createCardioLogEmbed(interaction: CommandInteraction, log: Cardio
       text: `Last month you logged ${ prevMonthsAverages.count } workouts on the same date`,
       iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
     })
-}
-
-interface CardioLog {
-  created: Timestamp
-  date: Timestamp
-  image: string
-  intensity: number
-  lift_type: "cardio"
-  minutes: number
-  user: DiscordUser
-}
-
-type CardioStats = Pick<CardioLog, "minutes" | "intensity"> & {
-  count?: number
 }
