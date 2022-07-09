@@ -143,7 +143,7 @@ async function createCardioLogEmbed(interaction: CommandInteraction, log: Cardio
       { name: `${ prevMonth.toLocaleString("default", { month: "short" }).toUpperCase() } AVG.`, value: `Zone ${prevMonthsAverages.intensity}`, inline: true },
     ])
     .setFooter({
-      text: `Last month you logged ${ prevMonthsAverages.count } workouts on the same date`,
+      text: `By this day last month you logged ${ prevMonthsAverages.count } cardio sessions.`,
       iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
     })
 }

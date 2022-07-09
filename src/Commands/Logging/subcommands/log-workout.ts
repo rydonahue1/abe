@@ -124,7 +124,7 @@ async function createWorkoutLogEmbed(
       { name: `\u200B`, value: countList, inline: true },
     ])
     .setFooter({
-      text: `Last month you logged ${prevMonthsCount} workouts on the same date`,
+      text: `By this day last month you logged ${prevMonthsCount} workouts.`,
       iconURL: "https://pbs.twimg.com/profile_images/1536412752813690881/Rgw_qiB6_400x400.jpg",
     })
 }
