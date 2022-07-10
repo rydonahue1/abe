@@ -1,10 +1,11 @@
 import type { Command, Event, Config } from "./bot";
+import { YoutubeResults } from "./youtube";
 export type {
   Command,
   Event,
-  Config
+  Config,
+  YoutubeResults
 }
-
 
 export type LiftTypes = "Push Day" | "Pull Day" | "Leg Day" | "Chest Day" | "Back Day" | "Shoulder Day" | "Arm Day" | "Accessory Day" | "Full Body"
 export type LogTypes = "workout" | "cardio"
