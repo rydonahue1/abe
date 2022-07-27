@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import axios from 'axios'
 
 // Checks if url is an image type
 export function isPathToImage(url: string) {
@@ -8,7 +8,7 @@ export function isPathToImage(url: string) {
 
 // Checks if imsge exists
 export async function imageExists(url: string) {
-  const res = await fetch(url)
+  const res = await axios(url)
   return res.ok
 }
 

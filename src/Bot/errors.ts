@@ -1,5 +1,5 @@
 import { Guild } from "discord.js"
-import { GuildMember, MessageAttachment } from "discord.js"
+import { GuildMember, Attachment } from "discord.js"
 
 // UCheck if person who sent message has a role
 export function hasRole(member: GuildMember, requiredRole: string | string[]) {
@@ -15,7 +15,7 @@ export function hasRole(member: GuildMember, requiredRole: string | string[]) {
 }
 
 // Check if file type matches required
-export function isFileType(attachment: MessageAttachment, fileType: string) {
+export function isFileType(attachment: Attachment, fileType: string) {
   if (!attachment.name?.endsWith(fileType)) {
     throw new Error("Error: Wrong file type")
   }
