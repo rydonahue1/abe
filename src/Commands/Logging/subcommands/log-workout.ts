@@ -1,13 +1,13 @@
 import { File } from "@google-cloud/storage"
-import { CommandInteraction, MessageAttachment, MessageEmbed, User } from "discord.js"
+import { CommandInteraction, EmbedBuilder, ChatInputCommandInteraction } from "discord.js"
 import { Timestamp } from "firebase-admin/firestore"
-import { baseEmbedMessage } from "../../../Bot/embed"
+import { BaseEmbed } from "../../../Bot/embed"
 import { db } from "../../../firebase"
 import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
 import { getRandomFile } from "../../../Firebase/storage"
 import { LiftTypes, WorkoutLog } from "@types"
 
-export const logWorkout = async function (interaction: CommandInteraction) {
+export const logWorkout = async function (interaction: ChatInputCommandInteraction) {
   if (!interaction.member) return
 
   try {
@@ -29,7 +29,7 @@ export const logWorkout = async function (interaction: CommandInteraction) {
     interaction.editReply({ embeds: [embedReply] })
   } catch (err) {
     if (err instanceof Error) {
-      const embed = baseEmbedMessage()
+      const embed = new BaseEmbed()
         .setTitle(`⚠️ Sorry, we ran into a problem.`)
         .setDescription(`${err?.message || err}`)
       if (interaction.replied) await interaction.followUp({ embeds: [embed], ephemeral: false })
@@ -44,7 +44,7 @@ export const logWorkout = async function (interaction: CommandInteraction) {
  * @param storageFile the attached file the user uploaded
  * @returns Firebase doc reference
  */
-async function saveWorkout(interaction: CommandInteraction, storageFile: File) {
+async function saveWorkout(interaction: ChatInputCommandInteraction, storageFile: File) {
   const liftType = interaction.options.getString("lift-type", true)
   const input_date = interaction.options.getNumber("date", true)
   const logType = interaction.options.getSubcommand()
@@ -90,7 +90,7 @@ async function createWorkoutLogEmbed(
   log: WorkoutLog,
   logCounts: number[],
   liftTypes: Record<LiftTypes, number>
-): Promise<MessageEmbed> {
+): Promise<EmbedBuilder> {
   const [thisMonthsCount, prevMonthsCount] = logCounts
   const percentage = (thisMonthsCount / (prevMonthsCount ? prevMonthsCount : 1)) * 100
 
@@ -111,7 +111,7 @@ async function createWorkoutLogEmbed(
   const file = await getRandomFile(`assets/reactions/${reaction}`)
 
   // Create embed
-  return baseEmbedMessage()
+  return new BaseEmbed()
     .setTitle(`${interaction.user.username} just logged a ${log.liftType.toLowerCase()} workout, please clap!`)
     .setDescription(`\`\`\`You are logging ${percentage}% of the workouts you did last month.\`\`\``)
     .setThumbnail(file.publicUrl())

@@ -1,7 +1,7 @@
 import { File } from "@google-cloud/storage"
-import { CommandInteraction, MessageAttachment, User } from "discord.js"
+import { ChatInputCommandInteraction, CommandInteraction, Attachment, User } from "discord.js"
 import { getRandomFile, uploadMessageAttachment } from "../../../Firebase/storage"
-import { baseEmbedMessage } from "../../../Bot/embed"
+import { BaseEmbed } from "../../../Bot/embed"
 import { getSortableDate } from "../../../Bot/helpers"
 import { db } from "../../../firebase"
 // import { getRandomFile, uploadMessageAttachment } from "../../../Firebase/storage"
@@ -12,13 +12,14 @@ import { db } from "../../../firebase"
  * @param interaction
  * @returns MessageAttachment
  */
-export async function requestAndGetImage(interaction: CommandInteraction): Promise<MessageAttachment> {
+export async function requestAndGetImage(interaction: ChatInputCommandInteraction): Promise<Attachment> {
   const subCommand = interaction.options.getSubcommand()
-  const embed = baseEmbedMessage().setTitle(`Logging ${ subCommand } for: ${ interaction.member?.user.username }`).setDescription(`Now poast that pic of your ${ subCommand } session!`)
+  const embed = new BaseEmbed().setTitle(`Logging ${ subCommand } for: ${ interaction.member?.user.username }`).setDescription(`Now poast that pic of your ${ subCommand } session!`)
   const file = await getRandomFile(`assets/${ subCommand }_fails`)
   embed.setImage(file.publicUrl())
   await interaction.reply({ embeds: [embed], ephemeral: false })
 
+  console.log('test')
   // Listen to and collect replies from author
   const authorId = interaction.member?.user.id
   const collected = await interaction.channel?.awaitMessages({
@@ -29,7 +30,9 @@ export async function requestAndGetImage(interaction: CommandInteraction): Promi
     max: 1,
   })
 
+  console.log(collected)
   const message = collected?.first()
+  console.log(message)
   const attachment = message?.attachments.first()
   await message?.delete();
   if (!attachment) throw new Error(`There was a problem getting your image.`)
@@ -42,7 +45,7 @@ export async function requestAndGetImage(interaction: CommandInteraction): Promi
  * @param maessageAttachment
  * @returns File (Google Storage)
  */
-export async function saveImageToCloud(interaction: CommandInteraction, maessageAttachment: MessageAttachment): Promise<File> {
+export async function saveImageToCloud(interaction: ChatInputCommandInteraction, maessageAttachment: Attachment): Promise<File> {
   if (!maessageAttachment) throw new Error("I didn't get any image, try again.")
 
   const subCommand = interaction.options.getSubcommand();
@@ -60,7 +63,7 @@ export async function saveImageToCloud(interaction: CommandInteraction, maessage
  * @param endDate date to get all logs created before
  * @returns firebase query snapshot
  */
- export async function getLogs(interaction: CommandInteraction, startDate: Date, endDate: Date): Promise<FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>> {
+ export async function getLogs(interaction: ChatInputCommandInteraction, startDate: Date, endDate: Date): Promise<FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>> {
   const subCommand = interaction.options.getSubcommand()
   const logsRef = db.collection("logs")
   return await logsRef

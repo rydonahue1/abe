@@ -1,13 +1,13 @@
 import { File } from "@google-cloud/storage"
-import { CommandInteraction, MessageEmbed } from "discord.js"
+import { ChatInputCommandInteraction, CommandInteraction, EmbedBuilder } from "discord.js"
 import { Timestamp } from "firebase-admin/firestore"
 import { getRandomFile } from "../../../Firebase/storage"
-import { baseEmbedMessage } from "../../../Bot/embed"
+import { BaseEmbed } from "../../../Bot/embed"
 import { db } from "../../../firebase"
 import { getRelativeDates, requestAndGetImage, saveImageToCloud, getLogs } from "./log.functions"
 import { CardioLog, CardioStats } from "@types"
 
-export const logCardio = async function (interaction: CommandInteraction) {
+export const logCardio = async function (interaction: ChatInputCommandInteraction) {
   if (!interaction.member) return
 
   try {
@@ -31,7 +31,7 @@ export const logCardio = async function (interaction: CommandInteraction) {
     interaction.editReply({ embeds: [embedReply] })
   } catch (err) {
     if (err instanceof Error) {
-      const embed = baseEmbedMessage()
+      const embed = new BaseEmbed()
         .setTitle(`⚠️ Sorry, we ran into a problem.`)
         .setDescription(`${err?.message || err}`)
       if (interaction.replied) await interaction.followUp({ embeds: [embed], ephemeral: false })
@@ -46,7 +46,7 @@ export const logCardio = async function (interaction: CommandInteraction) {
  * @param storageFile the attached file the user uploaded
  * @returns Firebase doc reference
  */
-async function saveCardioLog(interaction: CommandInteraction, storageFile: File) {
+async function saveCardioLog(interaction: ChatInputCommandInteraction, storageFile: File) {
   const minutes = interaction.options.getNumber("minutes")!
   const intensity = interaction.options.getNumber("intensity")!
   const input_date = interaction.options.getNumber("date")!
@@ -115,7 +115,7 @@ function getAverages(totals: CardioStats, count: number): CardioStats {
  * @param averages the monthly stat averages of the user who initialized the interaction
  * @returns Discord Message embed object
  */
-async function createCardioLogEmbed(interaction: CommandInteraction, log: CardioLog, averages: CardioStats[]): Promise<MessageEmbed> {
+async function createCardioLogEmbed(interaction: CommandInteraction, log: CardioLog, averages: CardioStats[]): Promise<EmbedBuilder> {
   const [thisMonthsAverages, prevMonthsAverages] = averages
   const percentage = (thisMonthsAverages.count! / prevMonthsAverages.count!) * 100
 
@@ -128,7 +128,7 @@ async function createCardioLogEmbed(interaction: CommandInteraction, log: Cardio
   const prevMonth = interaction.createdAt
   prevMonth.setMonth(prevMonth.getMonth() - 1)
 
-  return baseEmbedMessage()
+  return new BaseEmbed()
     .setTitle(`${interaction.user.username} just logged some cardio, please clap!`)
     .setDescription(`\`\`\`You are logging ${ percentage }% of the cardio you did last month.\`\`\``)
     .setThumbnail(file.publicUrl())

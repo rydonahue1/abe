@@ -1,6 +1,6 @@
 import { CardioLog, LogTypes, UsersLogs, WorkoutLog } from "@types"
-import { baseEmbedMessage } from "../../../Bot/embed"
-import { Collection, CommandInteraction, Formatters } from "discord.js"
+import { BaseEmbed } from "../../../Bot/embed"
+import { ChatInputCommandInteraction, Collection, CommandInteraction, Formatters } from "discord.js"
 import { DocumentData, QuerySnapshot } from "firebase-admin/firestore"
 import { db } from "../../../firebase"
 import { capitalize } from "lodash"
@@ -63,30 +63,45 @@ export function groupLogsByUser<T extends CardioLog | WorkoutLog>(
  * @param logsByUser Collection of logs grouped by users
  */
 export async function reportLogs<T extends CardioLog | WorkoutLog>(
-  interaction: CommandInteraction,
+  interaction: ChatInputCommandInteraction,
   logsByUser: Collection<string, UsersLogs<T>>
 ) {
   const logType = <LogTypes>interaction.options.getSubcommand()
   const month = interaction.options.getNumber('month', true)
 
-  const embed = baseEmbedMessage()
+  const embed = new BaseEmbed()
     .setTitle(`Reporting ${ logType } logs for ${ months[month - 1] }`)
     .setDescription(`Lets give some credit for everyone who logged their ${logType} sessions all month.`)
 
   let message = createMentionable(logsByUser, 0, 5)
-  embed.addField(`1+ ${capitalize(logType)} logs 👍`, message, true)
+  embed.addFields([{
+    name: `1+ ${capitalize(logType)} logs 👍`,
+    value: message
+  }])
 
   message = createMentionable(logsByUser, 5, 10)
-  embed.addField(`5+ ${capitalize(logType)} logs 🔥`, message)
+  embed.addFields([{
+    name: `5+ ${capitalize(logType)} logs 🔥`,
+    value: message
+  }])
 
   message = createMentionable(logsByUser, 10, 15)
-  embed.addField(`10+ ${capitalize(logType)} logs 🥉`, message)
+  embed.addFields([{
+    name: `10+ ${capitalize(logType)} logs 🥉`,
+    value: message
+  }])
 
   message = createMentionable(logsByUser, 15, 20)
-  embed.addField(`15+ ${capitalize(logType)} logs 🥈`, message)
+  embed.addFields([{
+    name: `15+ ${capitalize(logType)} logs 🥈`,
+    value: message
+  }])
 
   message = createMentionable(logsByUser, 20)
-  embed.addField(`20+ ${capitalize(logType)} logs 🥇`, message)
+  embed.addFields([{
+    name: `20+ ${capitalize(logType)} logs 🥇`,
+    value: message
+  }])
 
   await interaction.reply({ embeds: [embed], ephemeral: false })
 }
@@ -96,7 +111,7 @@ export async function reportLogs<T extends CardioLog | WorkoutLog>(
  * @param interaction Discord interaction that initiated the call
  * @param logsByUser Collection of logs grouped by users
  */
-export async function reportWinner<T extends CardioLog | WorkoutLog>(interaction: CommandInteraction, logsByUser: Collection<string, UsersLogs<T>>) {
+export async function reportWinner<T extends CardioLog | WorkoutLog>(interaction: ChatInputCommandInteraction, logsByUser: Collection<string, UsersLogs<T>>) {
   const logType  = <LogTypes>interaction.options.getSubcommand()
   const month = interaction.options.getNumber('month', true)
 
@@ -105,10 +120,9 @@ export async function reportWinner<T extends CardioLog | WorkoutLog>(interaction
     return logs.length >= (mostLogs ? mostLogs : 1)
   })
   winners.each(async ({ user, logs }, userId) => {
-    const embed = baseEmbedMessage()
-    embed.setTitle(`${ awards[logType].icon } ${ awards[logType].title } of ${ months[month - 1] }: ${ user.username }`)
-    embed.setDescription(``)
-    embed.setImage(logs.pop()?.image!)
+    const embed = new BaseEmbed()
+      .setTitle(`${ awards[logType].icon } ${ awards[logType].title } of ${ months[month - 1] }: ${ user.username }`)
+      .setImage(logs.pop()?.image!)
     await interaction.followUp({ embeds: [embed], ephemeral: false })
   })
 }

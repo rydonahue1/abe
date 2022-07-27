@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js"
+import { ChatInputCommandInteraction, CommandInteraction } from "discord.js"
 import { getLogs, groupLogsByUser, reportLogs, reportWinner } from "./report.functions"
 import { CardioLog } from "@types"
 
@@ -8,7 +8,7 @@ import { CardioLog } from "@types"
  * and announces a winner(s)
  * @param interaction Discord interaction that initiated the call
  */
-export async function reportCardio(interaction: CommandInteraction): Promise<void> {
+export async function reportCardio(interaction: ChatInputCommandInteraction): Promise<void> {
   // Get command values...
   const logType = interaction.options.getSubcommand();
   const month = interaction.options.getNumber('month', true)
