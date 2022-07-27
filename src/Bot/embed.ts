@@ -1,59 +1,38 @@
-import { ColorResolvable, MessageEmbed } from "discord.js"
+import { ColorResolvable, Colors, EmbedAuthorOptions, EmbedBuilder } from "discord.js"
 
-export interface BaseEmbedSettings {
-  author: boolean | {
-    name?: string;
-    iconURL?: string;
-    url?: string;
+export class BaseEmbed extends EmbedBuilder {
+  private defaultThumb: string = "https://firebasestorage.googleapis.com/v0/b/gaintrust.appspot.com/o/assets%2FGainTrust_small.png?alt=media&token=be476ba3-d137-4352-a9a6-a0e43a8f601b"
+  private defaultAuthor: EmbedAuthorOptions = {
+    "name": "Abe",
+    "iconURL": "https://firebasestorage.googleapis.com/v0/b/gaintrust.appspot.com/o/assets%2Fabe_icon.png?alt=media&token=c10a6834-3d7f-428d-848f-ab6485e6e236",
+    "url": "http://gaintrust.us"
   }
-  color?: ColorResolvable;
-  thumb?: string | false;
-  footer?: {
-    text?: string;
-    iconURL?: string;
-  } | boolean
-}
+  private defaultColor: ColorResolvable = [25, 25, 25]
 
-const defaultAuthor = {
-  name: "Abe",
-  iconURL: "https://firebasestorage.googleapis.com/v0/b/gaintrust.appspot.com/o/assets%2Fgaintrust_icon_single.jpg?alt=media&token=35949aa6-bb1c-405e-b959-e3cb5ee047e4",
-  url: "http://gaintrust.us",
-}
-
-const defaultFooter = {
-  text: "",
-  iconURL: "",
-}
-
-const defaultSettings: BaseEmbedSettings = {
-  author: false,
-  color: "LUMINOUS_VIVID_PINK",
-  thumb:
-    "https://firebasestorage.googleapis.com/v0/b/gaintrust.appspot.com/o/assets%2Fgaintrust_thumbnail.jpg?alt=media&token=81eac1ef-2359-432b-8789-a27b64f8c1b8",
-  footer: false,
-}
-
-export function baseEmbedMessage(overrideSettings: BaseEmbedSettings = defaultSettings): MessageEmbed {
-  const embed = new MessageEmbed()
-
-  let { author, footer } = overrideSettings
-  const { color, thumb } = { ...defaultSettings, ...overrideSettings }
-
-  if (typeof author === 'object') {
-    author = { ...defaultAuthor, ...author }
-    embed.setAuthor(author.name!, author.iconURL, author.url)
+  public constructor() {
+    super()
+    this.setDefaults()
   }
 
-  if (typeof footer === "object") {
-    footer = { ...defaultFooter, ...footer }
-    embed.setFooter(footer.text!, footer.iconURL)
+  public setDefaultColor() {
+    this.setColor(this.defaultColor)
+    return this
   }
 
-  embed.setColor(color!)
-
-  if (thumb) {
-    embed.setThumbnail(thumb)
+  public setDefaults() {
+    this.setDefaultThumbnail()
+    // this.setDefaultAuthor()
+    this.setDefaultColor()
+    return this
   }
 
-  return embed
+  public setDefaultThumbnail() {
+    this.setThumbnail(this.defaultThumb)
+    return this
+  }
+
+  public setDefaultAuthor() {
+    this.setAuthor(this.defaultAuthor)
+    return this
+  }
 }
