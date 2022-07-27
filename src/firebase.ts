@@ -12,6 +12,12 @@ if (!getApps().length) {
   })
 }
 
-export const db = getFirestore(firebaseApp)
-export const storage = getStorage(firebaseApp)
+const db = getFirestore(firebaseApp)
+const storage = getStorage(firebaseApp)
 
+db.settings({ ignoreUndefinedProperties: true })
+
+export {
+  db,
+  storage
+}

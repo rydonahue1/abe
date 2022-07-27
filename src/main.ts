@@ -4,10 +4,20 @@ import { token } from "./config";
 (async () => {
   try {
     console.log(`Inititializing bot...`)
-    const botInstance = new Bot(token);
-    const loggedIn = await botInstance.login(token);
+    const bot = new Bot(token);
+    const loggedIn = await bot.login(token);
     console.log(`logged in: ${ loggedIn }`)
-    await botInstance.init();
+
+    // const youtube = new Youtube()
+    // await youtube.getYoutubeVideos()
+
+    bot.on('ready', async (client) => {
+      console.log('Updating guilds!')
+      await bot.upsertGuilds()
+      console.log('Bot ready!')
+    })
+    await bot.init();
+
   }
   catch (err) {
     if (err instanceof Error) {

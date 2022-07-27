@@ -22,7 +22,7 @@
     // "noImplicitReturns": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "typeRoots": ["./src/@types"]
+    "typeRoots": ["./src/@types/*", "./npm_modules/@types"]
   },
   "include": ["./src"],
   "exclude": ["./config.json", "./dist"]
