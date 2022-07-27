@@ -1,19 +1,23 @@
 import { SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder, SlashCommandOptionsOnlyBuilder } from "@discordjs/builders"
 import { ClientEvents } from "discord.js"
+import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types/v10";
 
-export type Run = (...args: any[]) => Promise<void>
+type Run = (...args: any[]) => Promise<void>
+export type RunCommand = Run
+export type RunEvent = Run
+export type RegisterCommand = (guildId: string) => Promise<RESTPostAPIApplicationCommandsJSONBody>
 
 export interface Command {
   name: string
   description?: string
   requiredRoles?: string[]
-  data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder
-  run: Run
+  register: RegisterCommand
+  run: RunCommand
 }
 
 export interface Event {
   name: keyof ClientEvents
-  run: Run
+  run: RunEvent
 }
 
 export interface Config {

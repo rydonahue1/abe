@@ -1,34 +1,38 @@
-export interface YoutubeResults {
+export interface YoutubeAPIResult<T> {
   kind: string
   etag: string
   prevPageToken?: string
   nextPageToken?: string
   regionCode: string
   pageInfo: PageInfo
-  items: ResultItems[]
+  items: T[]
 }
 
-export interface ResultItems {
-  kind: ItemKind
+export interface YoutubePlaylist {
+  kind: YoutubePlaylist
   etag: string
-  id: ID
+  id: string
   snippet: Snippet
 }
 
+export interface YoutubePlaylistItem {
+  kind: YoutubeVideo
+  etag: string
+  id: string
+  snippet: Snippet,
+}
+
 export interface ID {
-  kind: IDKind
+  kind: Kind
   videoId?: string
   playlistId?: string
   channelId?: string
 }
 
-export enum IDKind {
+export enum Kind {
   YoutubeChannel = "youtube#channel",
   YoutubePlaylist = "youtube#playlist",
   YoutubeVideo = "youtube#video",
-}
-
-export enum ItemKind {
   YoutubeSearchResult = "youtube#searchResult",
 }
 
@@ -40,14 +44,21 @@ export interface Snippet {
   thumbnails: Thumbnails
   channelTitle: string
   liveBroadcastContent: string
-  publishTime: Date
+  publishTime?: Date
+  localized?: Localized
+  playlistId?: string
+  resourceId?: ID
+  position?: number
+  videoOwnerChannelTitle?: string
+  videoOwnerChannelId?: string
 }
-
 
 export interface Thumbnails {
   default: Thumbnail
   medium: Thumbnail
   high: Thumbnail
+  standard?: Default
+  maxres?: Default
 }
 
 export interface Thumbnail {

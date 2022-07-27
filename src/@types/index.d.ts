@@ -1,44 +1,36 @@
-import type { Command, Event, Config } from "./bot";
-import { YoutubeResults } from "./youtube";
+import type { Command, Event, Config, RegisterCommand } from "./bot"
+import type { YoutubeAPIResult, YoutubePlaylist, YoutubePlaylistItem, Snippet } from "./youtube"
+import type { GuildRecord, GuildOwner } from "./database/guilds";
+import type { CommandOptionsRecord } from "./database/commandOptions";
+import type { LogRecord, WorkoutLog, CardioLog, CardioStats, UsersLogs, DiscordUser, LogTypes, LiftTypes } from "./database/logs";
+import type { VideoRecord } from "./database/videos";
+
+// Bot Types
 export type {
-  Command,
-  Event,
-  Config,
-  YoutubeResults
+  Command, Event, RegisterCommand, Config
 }
 
-export type LiftTypes = "Push Day" | "Pull Day" | "Leg Day" | "Chest Day" | "Back Day" | "Shoulder Day" | "Arm Day" | "Accessory Day" | "Full Body"
-export type LogTypes = "workout" | "cardio"
-
-export interface Log {
-  created: Timestamp
-  date: Timestamp
-  logType: LogTypes
-  image: string
-  user: DiscordUser
+// Youtube API Types
+export type {
+  YoutubeAPIResult, YoutubePlaylist, YoutubePlaylistItem, Snippet
 }
 
-export interface WorkoutLog extends Log {
-  liftType: LiftTypes
+// CommandOptions Types
+export type {
+  CommandOptionsRecord
 }
 
-export interface CardioLog extends Log {
-  intensity: number
-  minutes: number
+// Guild Types
+export type {
+  GuildRecord, GuildOwner
 }
 
-export type CardioStats = Pick<CardioLog, "minutes" | "intensity"> & {
-  count?: number
+// Log Types
+export type {
+  LogRecord, WorkoutLog, CardioLog, CardioStats, UsersLogs, DiscordUser, LogTypes, LiftTypes
 }
 
-export interface UsersLogs<T extends WorkoutLog | CardioLog> {
-  user: DiscordUser
-  logs: T[];
-}
-
-export interface DiscordUser {
-  avatar: string;
-  discriminator: string;
-  id: string;
-  username: string;
+// Video Types
+export type {
+  VideoRecord
 }
