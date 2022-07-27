@@ -1,4 +1,4 @@
-import { MessageAttachment } from "discord.js"
+import { Attachment } from "discord.js"
 import { storage } from "../firebase"
 
 import https from "https"
@@ -41,7 +41,7 @@ export async function uploadFromURL(url: string, path: string, fileName: string)
   })
 }
 // Upload remote file to storage bucket
-export async function uploadMessageAttachment(attachment: MessageAttachment, path: string, fileName?: string) {
+export async function uploadMessageAttachment(attachment: Attachment, path: string, fileName?: string) {
 
   const bucket = storage.bucket(firebaseBucket)
   const name = fileName ? fileName : attachment.name
