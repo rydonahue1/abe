@@ -9,7 +9,7 @@ export function isPathToImage(url: string) {
 // Checks if imsge exists
 export async function imageExists(url: string) {
   const res = await axios(url)
-  return res.ok
+  return (res.status === 200)
 }
 
 
