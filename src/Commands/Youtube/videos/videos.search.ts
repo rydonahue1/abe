@@ -62,12 +62,10 @@ export async function searchVideos(interaction: ChatInputCommandInteraction) {
     const videoData = <VideoRecord>video.data()
     const embed = new BaseEmbed()
     return embed.setTitle(`${videoData.title}${ videoData.modification ? `- ${videoData.modification}` : `` }`)
-      // .setFields({ name: "Modifications", value: videoData.modification ? videoData.modification : '' , inline: true })
       .setFields(
-        // { name: "Muscle Groups", value: videoData.muscleGroups.join(', ') },
         { name: "Primary Muscles", value: videoData.primaryMuscles.join(', '), inline: true },
-        { name: "Secondary Muscles", value: videoData.secondaryMuscles.join(', '), inline: true },
-        { name: "Equipment Used", value: videoData.equipment.join(', '), inline: false }
+        { name: "Secondary Muscles", value: videoData.secondaryMuscles.join(', ') ? videoData.secondaryMuscles.join(', ') : `-`, inline: true },
+        { name: "Equipment Used", value:  videoData.equipment.join(', '), inline: false }
       )
       .setDescription(videoData.videoUrl)
       .setURL(videoData.videoUrl)
