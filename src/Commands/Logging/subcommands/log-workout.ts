@@ -104,8 +104,8 @@ async function createWorkoutLogEmbed(
 
   // Create reaction thumb
   let reaction = "neutral"
-  reaction = percentage <= 80 ? "negative" : reaction
-  reaction = percentage >= 100 ? "positive" : reaction
+  reaction = percentage <= 50 ? "negative" : reaction
+  reaction = percentage >= 80 ? "positive" : reaction
   const file = await getRandomFile(`assets/reactions/${reaction}`)
 
   // Create embed
