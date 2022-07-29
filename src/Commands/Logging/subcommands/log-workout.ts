@@ -96,12 +96,10 @@ async function createWorkoutLogEmbed(
 
   // Create breakdown
   let typesList = ""
-  let countList = ""
   Object.entries(liftTypes)
     .sort(([atype, aCount], [bType, bCount]) => bCount - aCount)
     .map(([key, value]) => {
-      typesList += `${key}\n`
-      countList += `${value}\n`
+      typesList += `${key}: ${value}\n`
     })
 
   // Create reaction thumb
@@ -113,7 +111,7 @@ async function createWorkoutLogEmbed(
   // Create embed
   return new BaseEmbed()
     .setTitle(`${interaction.user.username} just logged a ${log.liftType.toLowerCase()} workout, please clap!`)
-    .setDescription(`\`\`\`You are logging ${percentage}% of the workouts you did last month.\`\`\``)
+    .setDescription(`\`\`\`You are logging ${percentage.toFixed(2)}% of the workouts you did last month.\`\`\``)
     .setThumbnail(file.publicUrl())
     .setImage(`${log.image}`)
     .setFields([
@@ -121,7 +119,6 @@ async function createWorkoutLogEmbed(
       { name: `${interaction.createdAt.toLocaleString("default", { month: "long" }).toUpperCase()} TOTAL`, value: `${thisMonthsCount} logs`, inline: true },
       { name: "🏋️‍♂️ LIFTED", value: `${log.liftType}`, inline: false },
       { name: `📈 BREAKDOWN`, value: typesList, inline: true },
-      { name: `\u200B`, value: countList, inline: true },
     ])
     .setFooter({
       text: `By this day last month you logged ${prevMonthsCount} workouts.`,
